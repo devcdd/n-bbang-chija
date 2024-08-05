@@ -2,7 +2,7 @@ import React from 'react'
 
 import classNames from 'classnames'
 import { Button as ShadcnButton } from '../../ui/button'
-import { cn } from '../../../lib/utils.ts'
+import { cn } from '../../../lib/util/utils.ts'
 
 interface ButtonProps {
   children?: React.ReactNode

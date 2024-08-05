@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '../components/ui/alert-dialog.tsx'
+import { ErrorMessage, InfoMessage, SuccessMessage } from '../lib/util/utils.ts'
 
 interface MembersProps {}
 
@@ -28,7 +29,7 @@ const Members = (props: MembersProps) => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  const [memberInput, setMemberInput] = useState(null)
+  const [memberInput, setMemberInput] = useState<string | null>(null)
   const memberInputRef = useRef(null)
   const memberList = useMemberListStore((state) => state.memberList)
 
@@ -43,9 +44,9 @@ const Members = (props: MembersProps) => {
 
   const handleAddMember = () => {
     if (!memberInput) {
-      message.info({
-        content: `이름을 입력하지 않아 '유저${memberList.length + 1}'로 추가됩니다.`,
-      })
+      InfoMessage(
+        `이름을 입력하지 않아 '유저${memberList.length + 1}'로 추가됩니다.`,
+      )
       setMemberList([
         ...memberList,
         { name: `유저${memberList.length + 1}`, money: 0 },
@@ -55,9 +56,9 @@ const Members = (props: MembersProps) => {
     }
 
     if (memberList.find((member) => member.name === memberInput)) {
-      message.error({
-        content: `"${memberInput}" 님은 이미 추가되어 있습니다, 다른 이름을 입력해주세요.`,
-      })
+      ErrorMessage(
+        `"${memberInput}" 님은 이미 추가되어 있습니다, 다른 이름을 입력해주세요.`,
+      )
       return
     }
 
@@ -71,13 +72,12 @@ const Members = (props: MembersProps) => {
     setMemberInput('')
     memberInputRef.current?.focus()
 
-    message.info({
-      content: `"${memberInput}" 님이 추가되었습니다.`,
-    })
+    InfoMessage(`"${memberInput}" 님이 추가되었습니다.`)
   }
 
   const handleResetMember = () => {
     setMemberList([])
+    SuccessMessage('모든 멤버가 삭제되었습니다.')
   }
 
   const handleDeleteMember = (deleteMember: Member) => {
@@ -127,12 +127,7 @@ const Members = (props: MembersProps) => {
             value={memberInput}
             onChange={(e) => setMemberInput(e.target.value)}
             placeholder={'이름을 입력해주세요'}
-            onEnterPress={() =>
-              handleAddMember({
-                name: memberInput,
-                money: 0,
-              })
-            }
+            onEnterPress={() => handleAddMember()}
           />
         </figure>
         <div className={'flex justify-end gap-2'}>
@@ -143,7 +138,6 @@ const Members = (props: MembersProps) => {
                   className={
                     'mt-4 ml-auto bg-white text-black hover:text-white'
                   }
-                  onClick={handleResetMember}
                 >
                   초기화
                 </Button>
@@ -205,9 +199,7 @@ const Members = (props: MembersProps) => {
         className={'mt-4 ml-auto w-full'}
         onClick={() => {
           if (memberList.length < 1) {
-            message.error({
-              content: '멤버를 추가해주세요.',
-            })
+            ErrorMessage('멤버를 추가해주세요 !')
             return
           }
           setSubmitDialog(true)

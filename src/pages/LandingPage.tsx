@@ -2,6 +2,7 @@ import React from 'react'
 import Button from '../components/common/button/Button.tsx'
 import { useNavigate } from 'react-router-dom'
 import MoneyHandIcon from '../assets/icons/components/icon/MoneyHandIcon.tsx'
+import { SuccessMessage } from '../lib/util/utils.ts'
 
 interface LandingPageProps {}
 
@@ -34,7 +35,7 @@ const LandingPage = (props: LandingPageProps) => {
           'text-left mt-8 text-black font-semibold bg-black bg-opacity-90 rounded-md p-4 h-[200px] flex justify-center items-center hover:scale-105 transition-transform ease-in-out cursor-pointer '
         }
         onClick={() => {
-          window.alert('공감 해주셔서 감사합니다.')
+          SuccessMessage('공감해주셔서 감사합니다 ㅠ')
         }}
       >
         <figure className={'text-center text-white'}>
