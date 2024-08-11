@@ -3,3 +3,8 @@ export enum PaymentMethod {
   ONE_BASKET_PAYMENT = 'ONE_BASKET_PAYMENT',
   RANDOM_PAYMENT = 'RANDOM_PAYMENT',
 }
+
+export enum PaymentStatus {
+  MEETING_INFO_INPUT = 'MEETING_INFO_INPUT',
+  AMOUNT_INPUT = 'AMOUNT_INPUT',
+}

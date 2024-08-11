@@ -1,92 +1,199 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Button from '../components/common/button/Button.tsx'
-import Input from '../components/common/input/Input.tsx'
 import Header from '../assets/icons/components/header/Header.tsx'
+import { SuccessMessage, WarningMessage } from '../lib/util/utils.ts'
+import { PaymentStatus } from '../constant'
+import Input from '../components/common/input/Input.tsx'
+import { useMemberListStore } from '../store/useMemberListStore.ts'
+import {
+  setPaymentDetail,
+  setPaymentList,
+  usePaymentListStore,
+} from '../store/usePaymentListStore.ts'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { usePayment } from '../hooks/usePayment.ts'
+import MoneyKeypad from '../components/common/moneyKeypad/MoneyKeypad.tsx'
 
 interface FairPayProps {}
 
 const FairPay = (props: FairPayProps) => {
+  const paymentList = usePaymentListStore((state) => state.paymentList)
+  const memberList = useMemberListStore((state) => state.memberList)
+
+  const [searchParams] = useSearchParams()
+  const meetingIndex = useMemo<number>(() => {
+    return Number(searchParams.get('meeting')) - 1
+  }, [searchParams])
+  const navigate = useNavigate()
+
+  const { addPayment } = usePayment(meetingIndex)
+
   const [money, setMoney] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
+    PaymentStatus.MEETING_INFO_INPUT,
+  )
 
-  const handleNumberClick = (num: string) => {
-    setMoney((prevMoney) => prevMoney + num)
-  }
+  const handleMemberStatus = (memberName: string) => {
+    const isMemberToPay =
+      paymentList[meetingIndex]?.memberListToPay.includes(memberName)
 
-  const handleDeleteClick = () => {
-    setMoney((prevMoney) => prevMoney.slice(0, -1))
-  }
+    if (isMemberToPay) {
+      setPaymentDetail(
+        {
+          ...paymentList[meetingIndex],
+          memberListToPay: paymentList[meetingIndex].memberListToPay.filter(
+            (member) => member !== memberName,
+          ),
+          memberListToNotPay: [
+            ...paymentList[meetingIndex].memberListToNotPay,
+            memberName,
+          ],
+        },
+        meetingIndex,
+      )
+    }
 
-  const handleSubmitClick = () => {
-    const amount = Number(money)
-    if (!isNaN(amount)) {
-      console.log('Amount submitted:', amount)
-      // Handle the submitted amount here
+    if (!isMemberToPay) {
+      setPaymentDetail(
+        {
+          ...paymentList[meetingIndex],
+          memberListToNotPay: paymentList[
+            meetingIndex
+          ].memberListToNotPay.filter((member) => member !== memberName),
+          memberListToPay: [
+            ...paymentList[meetingIndex].memberListToPay,
+            memberName,
+          ],
+        },
+        meetingIndex,
+      )
     }
   }
 
-  const handleAddAmountClick = (amount: number) => {
-    const currentAmount = Number(money.replace(/,/g, ''))
-    const newAmount = currentAmount + amount
-    setMoney(formatMoney(newAmount.toString()))
-  }
-
   const formatMoney = (value: string) => {
-    // Remove any non-numeric characters
     const cleanedValue = value.replace(/\D/g, '')
-    // Format the number with commas
     return cleanedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   }
+
+  useEffect(() => {
+    console.log(
+      '%cFairPay.tsx:64 - %cpaymentList = ',
+      'color:yellow;',
+      'color:lightgreen; font-weight:bold',
+      paymentList,
+    )
+  }, [paymentList])
 
   return (
     <main className={'h-full'}>
       <Header />
-      <div className={'text-center text-4xl font-semibold'}>
-        <div>가격을 입력해주세요 !</div>
-      </div>
-      <div className={'text-6xl font-black text-center mt-4'}>
-        {money === '' ? 0 : formatMoney(money)}원
-      </div>
-      <div className={'mt-8 flex gap-2'}>
-        <div
-          className={
-            'rounded-xl border-2 border-black text-black font-semibold flex items-center justify-center cursor-pointer py-1 px-2'
-          }
-          onClick={() => handleAddAmountClick(1000)}
-        >
-          + 1000원
-        </div>
-        <div
-          className={
-            'rounded-xl border-2 border-black text-black font-semibold flex items-center justify-center cursor-pointer px-2 py-1'
-          }
-          onClick={() => handleAddAmountClick(10000)}
-        >
-          + 10000원
-        </div>
-      </div>
-      <div className={'mt-4 grid grid-cols-3 gap-2 h-[300px] select-none'}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => (
+      {paymentStatus === PaymentStatus.MEETING_INFO_INPUT && (
+        <>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-800 mb-6">
+              어떤 모임이었나요?
+            </div>
+            <Input
+              className="mt-4 h-12 w-3/4 mx-auto rounded-lg border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. 삼겹살 집"
+              value={paymentList[meetingIndex]?.title}
+              onChange={(e) => {
+                setPaymentDetail(
+                  {
+                    ...paymentList[meetingIndex],
+                    title: e.target.value,
+                  },
+                  meetingIndex,
+                )
+              }}
+            />
+          </div>
+
+          <div className="text-center mt-10">
+            <div className="text-3xl font-semibold text-gray-700 mb-4">
+              정산에 제외시킬 멤버를 터치해주세요!
+            </div>
+            <div>
+              <div className="text-lg font-medium text-gray-600 mb-2">
+                정산 참여 멤버
+              </div>
+              <div className="w-full flex flex-wrap gap-4 justify-center">
+                {paymentList[meetingIndex]?.memberListToPay.map(
+                  (member, index) => (
+                    <Button
+                      key={index}
+                      className="mt-2 px-4 py-2 rounded-full bg-blue-500 text-white shadow-md hover:bg-blue-600 transition-all"
+                      onClick={() => handleMemberStatus(member)}
+                    >
+                      {member}
+                    </Button>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-10">
+            <div className="text-3xl font-semibold text-gray-700 mb-4">
+              정산에 참여시킬 멤버를 터치해주세요!
+            </div>
+            <div>
+              <div className="text-lg font-medium text-gray-600 mb-2">
+                정산 미참여 멤버
+              </div>
+              <div className="w-full flex flex-wrap gap-4 justify-center">
+                {paymentList[meetingIndex]?.memberListToNotPay.map(
+                  (member, index) => (
+                    <Button
+                      key={index}
+                      className="mt-2 px-4 py-2 rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-all"
+                      onClick={() => handleMemberStatus(member)}
+                    >
+                      {member}
+                    </Button>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <Button
+              className={'mt-10 w-full'}
+              onClick={() => setPaymentStatus(PaymentStatus.AMOUNT_INPUT)}
+            >
+              정산 금액 입력하러 가기
+            </Button>
+          </div>
+        </>
+      )}
+      {paymentStatus === PaymentStatus.AMOUNT_INPUT && (
+        <>
+          <div className={'text-center text-4xl font-semibold'}>
+            <div>가격을 입력해주세요 !</div>
+          </div>
+          <div className={'text-4xl font-black text-center mt-4 select-none'}>
+            {paymentList[meetingIndex].amount}원
+          </div>
+          <MoneyKeypad />
           <Button
-            className={'h-full text-2xl'}
-            key={number}
-            onClick={() => handleNumberClick(number.toString())}
+            className={'w-full mt-8'}
+            onClick={() => setPaymentStatus(PaymentStatus.MEETING_INFO_INPUT)}
           >
-            {number}
+            제외시킬 멤버 다시 고르러 가기
           </Button>
-        ))}
-        <Button className={'h-full text-2xl'} onClick={handleDeleteClick}>
-          {'<='}
-        </Button>
-        <Button
-          className={'h-full text-2xl'}
-          onClick={() => handleNumberClick('0')}
-        >
-          0
-        </Button>
-        <Button className={'h-full text-2xl'} onClick={handleSubmitClick}>
-          입력완료
-        </Button>
-      </div>
+          <section className={'flex gap-2 mt-2'}>
+            <Button
+              className={'w-full'}
+              onClick={() => {
+                setPaymentStatus(PaymentStatus.MEETING_INFO_INPUT)
+                navigate(`/fair-pay?meeting=${meetingIndex + 2}`)
+              }}
+            >
+              (술)자리가 더 있었어요
+            </Button>
+            <Button className={'w-full'}>입력이 완전히 끝났어요</Button>
+          </section>
+        </>
+      )}
     </main>
   )
 }

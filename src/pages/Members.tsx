@@ -236,7 +236,7 @@ const Members = (props: MembersProps) => {
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                navigate(`/${searchParams.get('type')}`)
+                navigate(`/${searchParams.get('type')}?meeting=1`)
               }}
             >
               계속
