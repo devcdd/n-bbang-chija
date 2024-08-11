@@ -8,7 +8,7 @@ export const cn = (...inputs: ClassValue[]) => {
 
 message.config({
   duration: 3,
-  top: 300,
+  top: 200,
   maxCount: 1,
   // rtl: false,
 })
