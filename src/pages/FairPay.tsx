@@ -13,6 +13,16 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePayment } from '../hooks/usePayment.ts'
 import MoneyKeypad from '../components/common/moneyKeypad/MoneyKeypad.tsx'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../components/ui/alert-dialog.tsx'
 
 interface FairPayProps {}
 
@@ -188,9 +198,28 @@ const FairPay = (props: FairPayProps) => {
                 navigate(`/fair-pay?meeting=${meetingIndex + 2}`)
               }}
             >
-              (술)자리가 더 있었어요
+              정산할 자리가 더 있어요
             </Button>
-            <Button className={'w-full'}>입력이 완전히 끝났어요</Button>
+            <AlertDialog>
+              <AlertDialogTrigger className={'w-full'}>
+                <Button className={'w-full'}>입력을 완전히 끝냈어요</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogTitle>
+                  정산 정보 입력이 완전히 끝나셨나요?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  <div>
+                    <div>입력한 정보는 수정이 불가능합니다.</div>
+                    <div>정말로 입력을 완료하시겠습니까?</div>
+                  </div>
+                </AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction>정산 완료</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </section>
         </>
       )}
